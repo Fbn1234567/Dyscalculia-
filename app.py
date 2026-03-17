@@ -5,10 +5,8 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import SimpleConnectionPool
-
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "supersecretkey")
-
 bcrypt = Bcrypt(app)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -256,13 +254,10 @@ def symbolic_trial():
 
     left = random.randint(1, 50)
     right = random.randint(1, 50)
-
     while left == right:
         right = random.randint(1, 50)
-
     session["left"] = left
     session["right"] = right
-
     return render_template("symbolic_test.html", left=left, right=right, trial=trial + 1)
 
 
@@ -333,11 +328,9 @@ def fraction_trial():
     b = random.randint(2, 10)
     c = random.randint(1, 9)
     d = random.randint(2, 10)
-
     while a / b == c / d:
         c = random.randint(1, 9)
         d = random.randint(2, 10)
-
     session["frac_left"] = [a, b]
     session["frac_right"] = [c, d]
 
@@ -420,10 +413,8 @@ def ans_trial():
 
     left = random.randint(5, 20)
     right = random.randint(5, 20)
-
     while left == right:
         right = random.randint(5, 20)
-
     session["ans_left"] = left
     session["ans_right"] = right
 
@@ -489,7 +480,6 @@ def wm_test():
 def wm_trial():
 
     level = session.get("wm_level", 3)
-
     sequence = [str(random.randint(1, 9)) for _ in range(level)]
     session["sequence"] = sequence
 
@@ -553,18 +543,26 @@ def final_prediction():
     label = label_encoder.inverse_transform(prediction)[0].lower()
     confidence = round(max(probability[0]) * 100, 2)
 
+    
     if label in ["dd", "severe", "high"]:
         risk = "Highest Risk"
         rec = "Immediate professional evaluation recommended."
     elif label in ["moderate", "medium"]:
         risk = "Medium Risk"
-        rec = "Provide additional math practice and monitoring."
+        rec = "Provide additional math practice and monitoring."\
+        "Take time to understand, not rush " \
+        "Ask questions when unsure" \
+        "Practice a little every day Revise basic concepts regularly " 
     elif label in ["mild", "low"]:
         risk = "Lowest Risk"
-        rec = "Provide reinforcement activities."
+        rec = " Check mistakes and learn from them " \
+        "Stay organized with work and steps " \
+        "Do a mix of easy and slightly challenging problems"
     else:
         risk = "No Dyscalculia Detected"
-        rec = "Continue normal learning."
+        rec = "You’re doing an amazing job. " \
+        "Your effort, focus, and willingness to learn are truly admirable. " \
+        "Keep up the great work—you should be proud of yourself."
 
     conn = get_db_connection()
     cur = conn.cursor()
