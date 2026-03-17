@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Symbolic Result</title>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+<div class="navbar">
+Dyscalculia Detection System
+</div>
+
+<div class="container">
+
+<div class="card center">
+
+<h2>Symbolic Comparison Completed</h2>
+
+<p><b>Accuracy:</b> {{ accuracy }}</p>
+
+<p><b>Average Reaction Time:</b> {{ mean_rt }} seconds</p>
+
+<br>
+
+<a href="/dashboard" class="btn btn-primary">
+Back to Dashboard
+</a>
+
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Student Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="navbar">
+        Dyscalculia Detection System
+    </div>
+
+    <div class="container">
+
+        <div class="card">
+
+            <h2>Student Assessment Results</h2>
+
+            <table>
+
+                <tr>
+                    <th>Student</th>
+                    <th>Risk Level</th>
+                    <th>Date</th>
+                </tr>
+
+                {% for r in results %}
+
+                <tr>
+
+                    <td>{{ r.student_email }}</td>
+
+                    <td>
+
+                        {% if r.risk_level == "Highest Risk" %}
+                        <span class="risk-high">Highest Risk</span>
+
+                        {% elif r.risk_level == "Medium Risk" %}
+                        <span class="risk-medium">Medium Risk</span>
+
+                        {% elif r.risk_level == "Lowest Risk" %}
+                        <span class="risk-low">Lowest Risk</span>
+
+                        {% else %}
+                        <span class="risk-none">No Dyscalculia Detected</span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ r.created_at }}</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </table>
+
+            <br>
+
+            <a href="/dashboard" class="btn btn-primary">
+                Back
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

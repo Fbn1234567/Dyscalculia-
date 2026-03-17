@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fraction Comparison Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .frac-options {
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .frac-btn {
+            font-size: 36px;
+            font-weight: 700;
+            padding: 30px 60px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: transform .2s, box-shadow .2s, background .2s, color .2s;
+        }
+        .frac-btn:hover {
+            transform: translateY(-4px) scale(1.04);
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color: white;
+            border-color: transparent;
+            box-shadow: var(--shadow-xl);
+        }
+    </style>
+    <script>
+        let startTime;
+        window.onload = function () { startTime = new Date().getTime(); }
+        function recordChoice(choice) {
+            let rt = (new Date().getTime() - startTime) / 1000;
+            document.getElementById("choice").value = choice;
+            document.getElementById("response_time").value = rt;
+            document.getElementById("testForm").submit();
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">Dyscalculia Detection System</div>
+    <div class="container">
+        <div class="card center">
+            <h2>Fraction Comparison Test</h2>
+            <p style="color:var(--text-secondary);">Trial {{ trial }} / 5 — Click the <b>larger</b> fraction</p>
+            <form id="testForm" method="POST" action="/submit_fraction">
+                <input type="hidden" name="choice" id="choice">
+                <input type="hidden" name="response_time" id="response_time">
+                <div class="frac-options">
+                    <button type="button" class="frac-btn" onclick="recordChoice('left')">{{ left }}</button>
+                    <button type="button" class="frac-btn" onclick="recordChoice('right')">{{ right }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Symbolic Comparison Test</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="navbar">
+        Dyscalculia Detection System
+    </div>
+
+    <div class="container">
+
+        <div class="card center symbolic-test-container">
+
+            <h2 class="symbolic-title">Which number is larger?</h2>
+
+            <form method="POST" action="/submit_symbolic">
+
+                <input type="hidden" name="response_time" id="response_time">
+
+                <div class="symbolic-options">
+
+                    <button type="submit" name="choice" value="left" class="symbolic-btn">
+                        {{ left }}
+                    </button>
+
+                    <button type="submit" name="choice" value="right" class="symbolic-btn">
+                        {{ right }}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        let startTime = Date.now();
+
+        document.querySelectorAll(".symbolic-btn").forEach(btn => {
+
+            btn.addEventListener("click", function () {
+
+                let rt = (Date.now() - startTime) / 1000;
+
+                document.getElementById("response_time").value = rt;
+
+            });
+
+        });
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Working Memory Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="navbar">Dyscalculia Detection System</div>
+    <div class="container">
+        <div class="card center">
+            <h2>Working Memory Task</h2>
+            <p style="color:var(--text-secondary);margin-bottom:20px;">Memorize this sequence:</p>
+            <h1 id="sequence" style="letter-spacing:12px;color:var(--blue-dark);font-size:48px;">{{ sequence }}</h1>
+            <form method="post" action="/submit_wm" id="wmForm" style="display:none;margin-top:20px;">
+                <p style="margin-bottom:12px;">Enter the sequence:</p>
+                <input type="text" name="answer" placeholder="Enter numbers" required style="max-width:300px;margin:0 auto;">
+                <br>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        setTimeout(function () {
+            document.getElementById("sequence").innerText = "Enter the sequence now";
+            document.getElementById("wmForm").style.display = "block";
+        }, 3000);
+    </script>
+</body>
+</html>

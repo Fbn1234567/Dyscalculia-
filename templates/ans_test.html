@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ANS Dot Comparison Test</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .canvas-row {
+            display: flex;
+            gap: 80px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .canvas-box {
+            cursor: pointer;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: transform .2s, box-shadow .2s;
+        }
+        .canvas-box:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--blue);
+        }
+        canvas { display: block; background: white; }
+    </style>
+    <script>
+        let startTime;
+        window.onload = function () {
+            startTime = new Date().getTime();
+            drawDots("leftCanvas", {{ left }});
+            drawDots("rightCanvas", {{ right }});
+        }
+        function drawDots(canvasId, count) {
+            let canvas = document.getElementById(canvasId);
+            let ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < count; i++) {
+                let x = Math.random() * 180 + 10;
+                let y = Math.random() * 180 + 10;
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, Math.PI * 2);
+                ctx.fillStyle = "#1e3a8a";
+                ctx.fill();
+            }
+        }
+        function choose(side) {
+            let rt = (new Date().getTime() - startTime) / 1000;
+            document.getElementById("choice").value = side;
+            document.getElementById("response_time").value = rt;
+            document.getElementById("form").submit();
+        }
+    </script>
+</head>
+<body>
+    <div class="navbar">Dyscalculia Detection System</div>
+    <div class="container">
+        <div class="card center">
+            <h2>ANS Task — Trial {{ trial }} / 5</h2>
+            <p style="color:var(--text-secondary);margin-bottom:10px;">Click the side with <b>more dots</b></p>
+            <form id="form" method="POST" action="/submit_ans">
+                <input type="hidden" name="choice" id="choice">
+                <input type="hidden" name="response_time" id="response_time">
+                <div class="canvas-row">
+                    <div class="canvas-box" onclick="choose('left')">
+                        <canvas id="leftCanvas" width="200" height="200"></canvas>
+                    </div>
+                    <div class="canvas-box" onclick="choose('right')">
+                        <canvas id="rightCanvas" width="200" height="200"></canvas>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assessment Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="navbar">Dyscalculia Detection System</div>
+    <div class="container">
+        <div class="card center">
+            <h2>Cognitive Assessment Completed</h2>
+            <p style="color:var(--text-secondary);margin-bottom:12px;">Predicted Risk Level</p>
+            {% if "Highest" in risk %}
+                <h1 class="result-high">{{ risk }}</h1>
+            {% elif "Medium" in risk %}
+                <h1 class="result-medium">{{ risk }}</h1>
+            {% elif "Lowest" in risk %}
+                <h1 class="result-low">{{ risk }}</h1>
+            {% else %}
+                <h1 style="font-size:36px;font-weight:700;color:var(--green);">{{ risk }}</h1>
+            {% endif %}
+            <h3 style="margin-top:24px;">Prediction Confidence</h3>
+            <p style="font-size:24px;font-weight:600;color:var(--blue-dark);">{{ confidence }}%</p>
+            <h3 style="margin-top:24px;">Recommendation</h3>
+            <p style="color:var(--text-secondary);margin-top:8px;">{{ recommendations }}</p>
+            <br>
+            <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

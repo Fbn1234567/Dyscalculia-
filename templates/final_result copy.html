@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Assessment Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="navbar">
+        Dyscalculia Detection System
+    </div>
+
+    <div class="container">
+
+        <div class="card center">
+
+            <h2>Cognitive Assessment Completed</h2>
+
+            <p>Predicted Risk Level</p>
+
+            <h1 class="result-high">{{ risk }}</h1>
+
+            <h3>Prediction Confidence</h3>
+            <p>{{ confidence }}%</p>
+
+            <h3>Recommendation</h3>
+
+            <p style="white-space:pre-line;">
+                {{ recommendations }}
+            </p>
+
+            <br>
+
+            <a href="/dashboard" class="btn btn-primary">
+                Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
