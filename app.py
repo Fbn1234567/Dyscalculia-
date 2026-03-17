@@ -15,8 +15,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # -----------------------------
 # DATABASE CONNECTION (LAZY POOL)
-# Pool is created on first request so a missing/bad DATABASE_URL
-# doesn't crash the entire app at startup.
 # -----------------------------
 _pool = None
 
@@ -286,7 +284,7 @@ def submit_symbolic():
 
         symbolic_data = session.get("symbolic_data", [])
         symbolic_data.append({"correct": correct_val, "rt": rt})
-        session["symbolic_data"] = symbolic_data          # reassign to mark session dirty
+        session["symbolic_data"] = symbolic_data
         session["symbolic_trial"] = session.get("symbolic_trial", 0) + 1
 
         return redirect("/symbolic_trial")
@@ -340,7 +338,7 @@ def fraction_trial():
         c = random.randint(1, 9)
         d = random.randint(2, 10)
 
-    session["frac_left"] = [a, b]     # list instead of tuple — JSON-safe
+    session["frac_left"] = [a, b]
     session["frac_right"] = [c, d]
 
     return render_template(
@@ -372,7 +370,7 @@ def submit_fraction():
 
         frac_data = session.get("frac_data", [])
         frac_data.append({"correct": correct_val, "rt": rt})
-        session["frac_data"] = frac_data          # reassign to mark session dirty
+        session["frac_data"] = frac_data
         session["frac_trial"] = session.get("frac_trial", 0) + 1
 
         return redirect("/fraction_trial")
@@ -450,7 +448,7 @@ def submit_ans():
 
         ans_data = session.get("ans_data", [])
         ans_data.append({"correct": correct_val, "rt": rt})
-        session["ans_data"] = ans_data          # reassign to mark session dirty
+        session["ans_data"] = ans_data
         session["ans_trial"] = session.get("ans_trial", 0) + 1
 
         return redirect("/ans_trial")
@@ -508,7 +506,7 @@ def submit_wm():
 
     wm_data = session.get("wm_data", [])
     wm_data.append({"level": session.get("wm_level", 3), "correct": correct})
-    session["wm_data"] = wm_data          # reassign to mark session dirty
+    session["wm_data"] = wm_data
 
     if correct:
         session["wm_level"] = session.get("wm_level", 3) + 1
@@ -538,15 +536,14 @@ def final_prediction():
 
     import numpy as np
 
+    # Use only 5 features — matches how the model was trained
     features = np.array([
         [
-            session.get("Mean_ACC_ANS", 0),
-            session.get("Mean_RTs_ANS", 0),
-            session.get("wm_K", 0),
             session.get("Accuracy_SymbolicComp", 0),
             session.get("RTs_SymbolicComp", 0),
             session.get("Accuracy_Fraction", 0),
             session.get("RTs_Fraction", 0),
+            session.get("wm_K", 0),
         ]
     ])
 
