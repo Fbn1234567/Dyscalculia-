@@ -490,3 +490,35 @@ input::placeholder {
         padding: 30px 50px;
     }
 }
+
+/* ===== TABLE STYLING ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th,
+td {
+    padding: 12px 15px;
+    text-align: left;
+}
+
+th {
+    background-color: #f4f4f4;
+    font-weight: 600;
+}
+
+tr {
+    border-bottom: 1px solid #ddd;
+}
+
+tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Center Risk Level column */
+td:nth-child(2),
+th:nth-child(2) {
+    text-align: center;
+}
