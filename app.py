@@ -536,14 +536,16 @@ def final_prediction():
 
     import numpy as np
 
-    # Use only 5 features — matches how the model was trained
+    # ✅ NOW USING ALL 7 FEATURES (matches training)
     features = np.array([
         [
+            session.get("Mean_ACC_ANS", 0),
+            session.get("Mean_RTs_ANS", 0),
+            session.get("wm_K", 0),
             session.get("Accuracy_SymbolicComp", 0),
             session.get("RTs_SymbolicComp", 0),
             session.get("Accuracy_Fraction", 0),
             session.get("RTs_Fraction", 0),
-            session.get("wm_K", 0),
         ]
     ])
 
