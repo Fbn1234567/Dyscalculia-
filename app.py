@@ -174,7 +174,7 @@ def logout():
 
 
 # -----------------------------
-# HISTORY  (referenced in student_dashboard.html)
+# HISTORY
 # -----------------------------
 @app.route("/history")
 def history():
@@ -201,7 +201,7 @@ def history():
 
 
 # -----------------------------
-# DEBUG ROUTE — visit once to confirm model feature names, then remove
+# DEBUG — visit once to confirm model feature names
 # -----------------------------
 @app.route("/debug_model")
 def debug_model():
@@ -296,6 +296,8 @@ def finish_symbolic():
 
 # =========================================================
 # FRACTION COMPARISON TEST  (5 trials)
+# Template expects: {{ left }}, {{ right }}, {{ trial }}
+# where left/right are fraction strings like "3/7"
 # =========================================================
 
 @app.route("/fraction_test")
@@ -330,16 +332,18 @@ def fraction_trial():
     while ln * rd == rn * ld:
         rn, rd = rand_fraction()
 
+    # Store raw values for scoring
     session["frac_left_num"] = ln
     session["frac_left_den"] = ld
     session["frac_right_num"] = rn
     session["frac_right_den"] = rd
     session.modified = True
 
+    # Template uses {{ left }} and {{ right }} as display strings
     return render_template(
         "fraction_test.html",
-        left_num=ln, left_den=ld,
-        right_num=rn, right_den=rd,
+        left=f"{ln}/{ld}",
+        right=f"{rn}/{rd}",
         trial=trial + 1
     )
 
@@ -384,7 +388,8 @@ def finish_fraction():
 
 
 # =========================================================
-# ANS (Approximate Number Sense) TEST  (5 trials)
+# ANS TEST  (5 trials)
+# Template expects: {{ left }}, {{ right }}, {{ trial }}
 # =========================================================
 
 @app.route("/ans_test")
@@ -406,21 +411,17 @@ def ans_trial():
     if trial >= 5:
         return redirect("/finish_ans")
 
-    left_dots = random.randint(5, 30)
-    right_dots = random.randint(5, 30)
-    while left_dots == right_dots:
-        right_dots = random.randint(5, 30)
+    left = random.randint(5, 30)
+    right = random.randint(5, 30)
+    while left == right:
+        right = random.randint(5, 30)
 
-    session["ans_left"] = left_dots
-    session["ans_right"] = right_dots
+    session["ans_left"] = left
+    session["ans_right"] = right
     session.modified = True
 
-    return render_template(
-        "ans_test.html",
-        left_dots=left_dots,
-        right_dots=right_dots,
-        trial=trial + 1
-    )
+    # Template uses {{ left }} and {{ right }}
+    return render_template("ans_test.html", left=left, right=right, trial=trial + 1)
 
 
 @app.route("/submit_ans", methods=["POST"])
@@ -461,7 +462,9 @@ def finish_ans():
 
 
 # =========================================================
-# WORKING MEMORY TEST  (5 trials — digit span)
+# WORKING MEMORY TEST  (5 trials)
+# Template expects: {{ sequence }}, {{ trial }}
+# where sequence is a space-separated string like "4 7 2 9"
 # =========================================================
 
 @app.route("/wm_test")
@@ -489,7 +492,9 @@ def wm_trial():
     session["wm_digits"] = digits
     session.modified = True
 
-    return render_template("wm_test.html", digits=digits, trial=trial + 1)
+    # Template uses {{ sequence }} as a display string
+    sequence = " ".join(str(d) for d in digits)
+    return render_template("wm_test.html", sequence=sequence, trial=trial + 1)
 
 
 @app.route("/submit_wm", methods=["POST"])
@@ -553,11 +558,10 @@ def final_prediction():
         mdl, le = load_model()
         import pandas as pd
 
-        # Read the exact feature names the model was trained with
+        # Read exact feature names the model was trained with
         feature_names = list(mdl.feature_names_in_)
         print("MODEL EXPECTS:", feature_names)
 
-        # All values collected across the 4 tests
         all_values = {
             "Mean_ACC_ANS":          session.get("Mean_ACC_ANS", 0),
             "Mean_RTs_ANS":          session.get("Mean_RTs_ANS", 0),
@@ -568,7 +572,7 @@ def final_prediction():
             "RTs_Fraction":          session.get("RTs_Fraction", 0),
         }
 
-        # Build DataFrame with ONLY the features the model expects, in correct order
+        # Only pass what the model expects, in the right order
         row = {k: all_values.get(k, 0) for k in feature_names}
         features = pd.DataFrame([row], columns=feature_names)
         print("FEATURES SENT TO MODEL:", features.to_dict())
