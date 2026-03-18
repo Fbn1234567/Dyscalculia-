@@ -532,72 +532,77 @@ def finish_wm():
 @app.route("/final_prediction")
 def final_prediction():
 
-    model, label_encoder = load_model()
+    try:
+        model, label_encoder = load_model()
+        import numpy as np
 
-    import numpy as np
+        # ✅ FORCE all values to float (prevents None crash)
+        features = np.array([[
+            float(session.get("Mean_ACC_ANS", 0)),
+            float(session.get("Mean_RTs_ANS", 0)),
+            float(session.get("wm_K", 0)),
+            float(session.get("Accuracy_SymbolicComp", 0)),
+            float(session.get("RTs_SymbolicComp", 0)),
+            float(session.get("Accuracy_Fraction", 0)),
+            float(session.get("RTs_Fraction", 0)),
+        ]])
 
-    # ✅ NOW USING ALL 7 FEATURES (matches training)
-    features = np.array([
-        [
-            session.get("Mean_ACC_ANS", 0),
-            session.get("Mean_RTs_ANS", 0),
-            session.get("wm_K", 0),
-            session.get("Accuracy_SymbolicComp", 0),
-            session.get("RTs_SymbolicComp", 0),
-            session.get("Accuracy_Fraction", 0),
-            session.get("RTs_Fraction", 0),
-        ]
-    ])
+        print("FEATURES:", features)  # 🔥 DEBUG (check Render logs)
 
-    prediction = model.predict(features)
-    probability = model.predict_proba(features)
+        prediction = model.predict(features)
+        probability = model.predict_proba(features)
 
-    label = label_encoder.inverse_transform(prediction)[0].lower()
-    confidence = round(max(probability[0]) * 100, 2)
+        label = label_encoder.inverse_transform(prediction)[0].lower()
+        confidence = round(max(probability[0]) * 100, 2)
 
-    if label in ["dd", "severe", "high"]:
-        risk = "Highest Risk"
-        rec = "Immediate professional evaluation recommended."
-    elif label in ["moderate", "medium"]:
-        risk = "Medium Risk"
-        rec = "Provide additional math practice and monitoring."
-    elif label in ["mild", "low"]:
-        risk = "Lowest Risk"
-        rec = "Provide reinforcement activities."
-    else:
-        risk = "No Dyscalculia Detected"
-        rec = "Continue normal learning."
+        if label in ["dd", "severe", "high"]:
+            risk = "Highest Risk"
+            rec = "Immediate professional evaluation recommended."
+        elif label in ["moderate", "medium"]:
+            risk = "Medium Risk"
+            rec = "Provide additional math practice and monitoring."
+        elif label in ["mild", "low"]:
+            risk = "Lowest Risk"
+            rec = "Provide reinforcement activities."
+        else:
+            risk = "No Dyscalculia Detected"
+            rec = "Continue normal learning."
 
-    conn = get_db_connection()
-    cur = conn.cursor()
+        conn = get_db_connection()
+        cur = conn.cursor()
 
-    cur.execute(
-        """
-        INSERT INTO results(student_email,ans_acc,ans_rt,wm_k,sym_acc,sym_rt,risk_level)
-        VALUES(%s,%s,%s,%s,%s,%s,%s)
-        """,
-        (
-            session["user"],
-            session.get("Mean_ACC_ANS", 0),
-            session.get("Mean_RTs_ANS", 0),
-            session.get("wm_K", 0),
-            session.get("Accuracy_SymbolicComp", 0),
-            session.get("RTs_SymbolicComp", 0),
-            risk,
-        ),
-    )
+        cur.execute(
+            """
+            INSERT INTO results(student_email,ans_acc,ans_rt,wm_k,sym_acc,sym_rt,risk_level)
+            VALUES(%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                session["user"],
+                float(session.get("Mean_ACC_ANS", 0)),
+                float(session.get("Mean_RTs_ANS", 0)),
+                float(session.get("wm_K", 0)),
+                float(session.get("Accuracy_SymbolicComp", 0)),
+                float(session.get("RTs_SymbolicComp", 0)),
+                risk,
+            ),
+        )
 
-    conn.commit()
-    cur.close()
-    release_db_connection(conn)
+        conn.commit()
+        cur.close()
+        release_db_connection(conn)
 
-    return render_template(
-        "final_result.html",
-        risk=risk,
-        confidence=confidence,
-        recommendations=rec,
-    )
+        return render_template(
+            "final_result.html",
+            risk=risk,
+            confidence=confidence,
+            recommendations=rec,
+        )
 
+    except Exception as e:
+        import traceback
+        print("ERROR IN FINAL PREDICTION:", str(e))
+        print(traceback.format_exc())
+        return "Error occurred. Check server logs."
 
 # -----------------------------
 # HISTORY
