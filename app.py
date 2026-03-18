@@ -100,6 +100,8 @@ def login():
 # -----------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    teachers = []
+    parents = []
     conn = get_db_connection()
     try:
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -120,18 +122,12 @@ def register():
 
             if role == "Student":
                 cur.execute(
-                    """
-                    INSERT INTO users(email, password, role, age, teacher_id, parent_id)
-                    VALUES(%s, %s, %s, %s, %s, %s)
-                    """,
+                    "INSERT INTO users(email, password, role, age, teacher_id, parent_id) VALUES(%s,%s,%s,%s,%s,%s)",
                     (email, hashed, role, age, teacher_id, parent_id),
                 )
             else:
                 cur.execute(
-                    """
-                    INSERT INTO users(email, password, role, age)
-                    VALUES(%s, %s, %s, %s)
-                    """,
+                    "INSERT INTO users(email, password, role, age) VALUES(%s,%s,%s,%s)",
                     (email, hashed, role, age),
                 )
 
@@ -175,6 +171,45 @@ def dashboard():
 def logout():
     session.clear()
     return redirect("/login")
+
+
+# -----------------------------
+# HISTORY  (referenced in student_dashboard.html)
+# -----------------------------
+@app.route("/history")
+def history():
+    if "user" not in session:
+        return redirect("/login")
+
+    results = []
+    conn = get_db_connection()
+    try:
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            "SELECT * FROM results WHERE user_email = %s ORDER BY created_at DESC",
+            (session["user"],)
+        )
+        results = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print("HISTORY ERROR (table may not exist yet):", e)
+        results = []
+    finally:
+        release_db_connection(conn)
+
+    return render_template("history.html", results=results, user=session["user"])
+
+
+# -----------------------------
+# DEBUG ROUTE — visit once to confirm model feature names, then remove
+# -----------------------------
+@app.route("/debug_model")
+def debug_model():
+    try:
+        mdl, _ = load_model()
+        return f"Model expects these {len(mdl.feature_names_in_)} features: {list(mdl.feature_names_in_)}"
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 # -----------------------------
@@ -267,7 +302,6 @@ def finish_symbolic():
 def fraction_test():
     if "user" not in session:
         return redirect("/login")
-
     session["frac_data"] = []
     session["frac_trial"] = 0
     session.modified = True
@@ -283,7 +317,6 @@ def fraction_trial():
     if trial >= 5:
         return redirect("/finish_fraction")
 
-    # Generate two distinct fractions (numerator/denominator)
     def rand_fraction():
         num = random.randint(1, 9)
         den = random.randint(2, 10)
@@ -294,7 +327,6 @@ def fraction_trial():
 
     ln, ld = rand_fraction()
     rn, rd = rand_fraction()
-    # Make sure they're not equal
     while ln * rd == rn * ld:
         rn, rd = rand_fraction()
 
@@ -359,7 +391,6 @@ def finish_fraction():
 def ans_test():
     if "user" not in session:
         return redirect("/login")
-
     session["ans_data"] = []
     session["ans_trial"] = 0
     session.modified = True
@@ -430,14 +461,13 @@ def finish_ans():
 
 
 # =========================================================
-# WORKING MEMORY TEST  (5 trials — dot-pattern / K score)
+# WORKING MEMORY TEST  (5 trials — digit span)
 # =========================================================
 
 @app.route("/wm_test")
 def wm_test():
     if "user" not in session:
         return redirect("/login")
-
     session["wm_data"] = []
     session["wm_trial"] = 0
     session.modified = True
@@ -453,7 +483,6 @@ def wm_trial():
     if trial >= 5:
         return redirect("/finish_wm")
 
-    # Simple digit-span style: show N digits to remember
     span = random.randint(3, 6)
     digits = [random.randint(1, 9) for _ in range(span)]
 
@@ -472,7 +501,6 @@ def submit_wm():
     rt = float(request.form.get("response_time", 0))
     correct_digits = session.get("wm_digits", [])
 
-    # Compare digit sequence
     try:
         user_digits = [int(d) for d in user_answer.split()]
     except ValueError:
@@ -498,12 +526,11 @@ def finish_wm():
     if not trials:
         session["wm_K"] = 0
     else:
-        # K = average span of correctly recalled sequences
         correct_trials = [t for t in trials if t["correct"] == 1]
-        if correct_trials:
-            session["wm_K"] = sum(t["span"] for t in correct_trials) / len(correct_trials)
-        else:
-            session["wm_K"] = 0
+        session["wm_K"] = (
+            sum(t["span"] for t in correct_trials) / len(correct_trials)
+            if correct_trials else 0
+        )
 
     session.modified = True
     return redirect("/final_prediction")
@@ -518,19 +545,33 @@ def final_prediction():
     if "user" not in session:
         return redirect("/login")
 
+    risk = "Unknown"
+    confidence = 0
+    recommendations = ""
+
     try:
         mdl, le = load_model()
-        import numpy as np
+        import pandas as pd
 
-        features = np.array([[
-            session.get("Mean_ACC_ANS", 0),
-            session.get("Mean_RTs_ANS", 0),
-            session.get("wm_K", 0),
-            session.get("Accuracy_SymbolicComp", 0),
-            session.get("RTs_SymbolicComp", 0),
-            session.get("Accuracy_Fraction", 0),
-            session.get("RTs_Fraction", 0),
-        ]])
+        # Read the exact feature names the model was trained with
+        feature_names = list(mdl.feature_names_in_)
+        print("MODEL EXPECTS:", feature_names)
+
+        # All values collected across the 4 tests
+        all_values = {
+            "Mean_ACC_ANS":          session.get("Mean_ACC_ANS", 0),
+            "Mean_RTs_ANS":          session.get("Mean_RTs_ANS", 0),
+            "wm_K":                  session.get("wm_K", 0),
+            "Accuracy_SymbolicComp": session.get("Accuracy_SymbolicComp", 0),
+            "RTs_SymbolicComp":      session.get("RTs_SymbolicComp", 0),
+            "Accuracy_Fraction":     session.get("Accuracy_Fraction", 0),
+            "RTs_Fraction":          session.get("RTs_Fraction", 0),
+        }
+
+        # Build DataFrame with ONLY the features the model expects, in correct order
+        row = {k: all_values.get(k, 0) for k in feature_names}
+        features = pd.DataFrame([row], columns=feature_names)
+        print("FEATURES SENT TO MODEL:", features.to_dict())
 
         prediction = mdl.predict(features)
         probability = mdl.predict_proba(features)
